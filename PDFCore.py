@@ -2675,8 +2675,9 @@ class PDFStream (PDFDictionary) :
     
 
 class PDFObjectStream (PDFStream) :
-    def __init__(self, rawDict = '', rawStream = '', elements = {}, rawNames = {}, compressedObjectsDict = {}) :
+    def __init__(self, rawDict = '', rawStream = '', elements = {}, rawNames = {}, compressedObjectsDict = {}, parser=None) :
         global isForceMode
+        self.parser = parser
         self.type = 'stream'
         self.dictType = ''
         self.errors = []
@@ -3239,8 +3240,8 @@ class PDFObjectStream (PDFStream) :
                 if numbers != [] and len(numbers) % 2 == 0:
                     for i in range(0,len(numbers),2):
                         id = numbers[i]
-                        offset = numbers[i+1]
-                        ret = PDFParser.readObject(objectsSection[offset:])
+                        offset = int(numbers[i+1])
+                        ret = self.parser.readObject(objectsSection[offset:])
                         if ret[0] == -1:
                             if isForceMode:
                                 object = None
@@ -7386,7 +7387,7 @@ class PDFParser :
                 name = ret[1]
         if elements.has_key('/Type') and elements['/Type'].getValue() == '/ObjStm':
             try:
-                pdfStream = PDFObjectStream(dict, stream, elements, rawNames, {})
+                pdfStream = PDFObjectStream(dict, stream, elements, rawNames, {}, parser=self)
             except Exception as e:
                 errorMessage = 'Error creating PDFObjectStream'
                 if e.message != '':
